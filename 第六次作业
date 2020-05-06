@@ -1,0 +1,185 @@
+
+library(MASS)
+#作业1
+mean1=c(3,6)
+mean2=c(3,-2)
+var1=matrix(c(0.5,0,0,2),nrow = 2)
+x1=mvrnorm(1000,c(3,6),var1)
+var2=matrix(c(2,0,0,2),nrow = 2)
+x2=mvrnorm(1000,c(3,-2),var2)
+x=rbind(x1,x2)
+#绘图
+plot(x1,col="red",xlim=c(1,5),ylim=c(-10,15),xlab = "x",ylab = "y")
+points(x2,col="blue")
+group1=rep(1,1000)
+group2=rep(2,1000)
+group=c(group1,group2)
+lda.1=lda(x,group)
+mean_lda=lda.1$means
+x0=0.5*c(mean_lda[1,1]+mean_lda[2,1],mean_lda[1,2]+mean_lda[2,2])
+
+w=lda.1$scaling
+k=-w[1]/w[2]
+xpre1=0
+xpre2=6
+y1=k*(xpre1-x0[1])+x0[2]
+y2=k*(xpre2-x0[1])+x0[2]
+lines(c(xpre1,xpre2),c(y1,y2),col="green")
+
+
+s0=cov(x1)
+s1=cov(x2)
+mean1=colMeans(x1,2)
+mean2=colMeans(x2,2)
+
+sw=s0+s1
+sb=mean1%*%mean2
+w=solve(sw)%*%(mean1-mean2)
+k=-w[1]/w[2]
+xpre1=0
+xpre2=6
+y1=k*(xpre1-x0[1])+x0[2]
+y2=k*(xpre2-x0[1])+x0[2]
+lines(c(xpre1,xpre2),c(y1,y2),col="orange")
+
+#作业2
+library(openxlsx)
+#清洗数据
+data <- read.csv('C:\\Users\\dax\\Desktop\\boston.csv')
+industry=c(data[,4])
+river=c(data[,5])
+nox=c(data[,6])
+rooms=c(data[,7])
+age=c(data[,8])
+distance=c(data[,9])
+value=c(data[,15])
+quatile1=quantile(value,c(0.25,0.5,0.75))
+for(i in 1:length(river))
+{
+  if(value[i]<quatile1[1])value[i]=1
+  else if(value[i]<quatile1[2])value[i]=2
+  else if(value[i]<quatile1[3])value[i]=3
+  else value[i]=4
+}
+i1=which(value==1)
+i2=which(value==2)
+i3=which(value==3)
+i4=which(value==4)
+#OVO回归
+data12=cbind(c(industry[i1],industry[i2]),c(river[i1],river[i2]),c(nox[i1],nox[i2])
+             ,c(rooms[i1],rooms[i2]),c(age[i1],age[i2]),c(distance[i1],distance[i2]))
+
+ovo12=lda(c(value[i1],value[i2])~.,data.frame(data12))
+
+data13=cbind(c(industry[i1],industry[i3]),c(river[i1],river[i3]),c(nox[i1],nox[i3])
+             ,c(rooms[i1],rooms[i3]),c(age[i1],age[i3]),c(distance[i1],distance[i3]))
+ovo13=lda(c(value[i1],value[i3])~.,data.frame(data13))
+data14=cbind(c(industry[i1],industry[i4]),c(river[i1],river[i4]),c(nox[i1],nox[i4])
+             ,c(rooms[i1],rooms[i4]),c(age[i1],age[i4]),c(distance[i1],distance[i4]))
+ovo14=lda(c(value[i1],value[i4])~.,data.frame(data14))
+data23=cbind(c(industry[i2],industry[i3]),c(river[i2],river[i3]),c(nox[i2],nox[i3])
+             ,c(rooms[i2],rooms[i3]),c(age[i2],age[i3]),c(distance[i2],distance[i3]))
+
+ovo23=lda(c(value[i2],value[i3])~.,data.frame(data23))
+
+data24=cbind(c(industry[i2],industry[i4]),c(river[i2],river[i4]),c(nox[i2],nox[i4])
+             ,c(rooms[i2],rooms[i4]),c(age[i2],age[i4]),c(distance[i2],distance[i4]))
+
+ovo24=lda(c(value[i2],value[i4])~.,data.frame(data24))
+
+data34=cbind(c(industry[i3],industry[i4]),c(river[i3],river[i4]),c(nox[i3],nox[i4])
+             ,c(rooms[i3],rooms[i4]),c(age[i3],age[i4]),c(distance[i3],distance[i4]))
+
+ovo34=lda(c(value[i3],value[i4])~.,data.frame(data34))
+
+data_all=cbind(industry,river,nox,rooms,age,distance)
+predict12=predict(ovo12,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict13=predict(ovo13,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict14=predict(ovo14,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict23=predict(ovo23,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict24=predict(ovo24,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict34=predict(ovo34,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+
+#预测结果展示
+result=matrix(0,nrow = length(river),ncol = 4)
+result1=seq(0.1,length(river))
+for(i in 1:length(river))
+{
+  result[i,mean(as.numeric(as.character(predict12$class[i])))]=result[i, mean(as.numeric(as.character(predict12$class[i])))]+1
+  
+  result[i,mean(as.numeric(as.character(predict13$class[i])))]=result[i, mean(as.numeric(as.character(predict13$class[i])))]+1
+  
+  result[i,mean(as.numeric(as.character(predict14$class[i])))]=result[i, mean(as.numeric(as.character(predict14$class[i])))]+1
+  
+  result[i,mean(as.numeric(as.character(predict23$class[i])))]=result[i, mean(as.numeric(as.character(predict23$class[i])))]+1
+  
+  result[i,mean(as.numeric(as.character(predict24$class[i])))]=result[i, mean(as.numeric(as.character(predict24$class[i])))]+1
+  
+  result[i,mean(as.numeric(as.character(predict34$class[i])))]=result[i, mean(as.numeric(as.character(predict34$class[i])))]+1
+}
+
+True=matrix(0,4,4)
+for(i in 1:length(river))
+{
+  result1[i]=which(result[i,]==max(result[i,]))
+  True[value[i],result1[i]]=True[value[i],result1[i]]+1
+}
+
+#MVM
+C1=c(-1,1,-1,1,1)
+C2=c(1,-1,-1,1,-1)
+C3=c(-1,1,1,-1,1)
+C4=c(-1,-1,1,1,-1)
+data_mvm=cbind(industry,river,nox,rooms,age,distance)
+value1=value
+value1[i2]=1
+value1[c(i1,i3,i4)]=-1
+MvM1=lda(value1~.,data.frame(data_mvm))
+value2=value
+value2[c(i1,i3)]=1
+value2[c(i2,i4)]=-1
+MvM2=lda(value2~.,data.frame(data_mvm))
+value3=value
+value3[c(i1,i2)]=-1
+value3[c(i3,i4)]=1
+MvM3=lda(value3~.,data.frame(data_mvm))
+value4=value
+value4[i3]=-1
+value4[c(i1,i2,i4)]=1
+MvM4=lda(value4~.,data.frame(data_mvm))
+value5=value
+value5[c(i1,i3)]=1
+value4[c(i2,i4)]=-1
+MvM5=lda(value5~.,data.frame(data_mvm))
+predict1=predict(MvM1,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict2=predict(MvM2,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict3=predict(MvM3,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict4=predict(MvM4,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+predict5=predict(MvM5,newdata = data.frame(X1=industry,X2=river,X3=nox,X4=rooms,X5=age,X6=distance))
+
+#预测结果展示
+x=c(0,0,0,0)
+predict_final=seq(1,length(river))
+for(i in 1:length(river))
+{
+  x[1]=(C1[1]-mean(as.numeric(as.character(predict1$class[i]))))^2+(C1[2]-mean(as.numeric(as.character(predict2$class[i]))))^2+
+    (C1[3]-mean(as.numeric(as.character(predict3$class[i]))))^2+
+    (C1[4]-mean(as.numeric(as.character(predict4$class[i]))))^2+(C1[5]-mean(as.numeric(as.character(predict5$class[i]))))^2
+  x[2]=(C2[1]-mean(as.numeric(as.character(predict1$class[i]))))^2+(C2[2]-mean(as.numeric(as.character(predict2$class[i]))))^2+
+    (C2[3]-mean(as.numeric(as.character(predict3$class[i]))))^2+
+    (C2[4]-mean(as.numeric(as.character(predict4$class[i]))))^2+(C2[5]-mean(as.numeric(as.character(predict5$class[i]))))^2
+  x[3]=(C3[1]-mean(as.numeric(as.character(predict1$class[i]))))^2+(C3[2]-mean(as.numeric(as.character(predict2$class[i]))))^2+
+    (C3[3]-mean(as.numeric(as.character(predict3$class[i]))))^2+
+    (C3[4]-mean(as.numeric(as.character(predict4$class[i]))))^2+(C3[5]-mean(as.numeric(as.character(predict5$class[i]))))^2
+  x[4]=(C4[1]-mean(as.numeric(as.character(predict1$class[i]))))^2+(C4[2]-mean(as.numeric(as.character(predict2$class[i]))))^2+
+    (C4[3]-mean(as.numeric(as.character(predict3$class[i]))))^2+
+    (C4[4]-mean(as.numeric(as.character(predict4$class[i]))))^2+(C4[5]-mean(as.numeric(as.character(predict5$class[i]))))^2
+  
+  predict_final[i]=which(x==min(x))
+
+}
+True1=matrix(0,4,4)
+for(i in 1:length(river))
+{
+  True1[value[i],predict_final[i]]=True1[value[i],predict_final[i]]+1
+}
