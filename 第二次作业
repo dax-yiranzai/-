@@ -1,0 +1,440 @@
+#第一题
+# -*- coding: utf-8 -*-
+"""
+Spyder Editor
+
+This is a temporary script file.
+"""
+
+from pandas import read_excel
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import roc_curve
+plt.figure("P-R Curve")
+plt.title('Precision/Recall Curve')
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+#y_true为样本实际的类别，y_scores为样本为正例的概率
+fishing=read_excel("C://Users//dax//Desktop//fishing.xlsx","fishing")
+fishing1=fishing.values
+fishing=np.array([0,0,0,0,0,0,0,0])
+for i in range(1,250):
+    if fishing1[i,4]==2:#对训练集进行筛选则==1
+        fishing=np.vstack((fishing,fishing1[i,:]))#将测试集或者训练集筛选出来
+fishing=np.delete(fishing,0,0)y_true = fishing[:,5]
+y_scores1 = fishing[:,6]
+y_scores2 = fishing[:,7]
+precision2, recall2, thresholds2 = precision_recall_curve(y_true, y_scores2)
+precision1, recall1, thresholds1 = precision_recall_curve(y_true, y_scores1)
+#print(precision1)
+#print(recall1)
+#print(thresholds1)
+
+L1,=plt.plot(recall1,precision1)
+L2,=plt.plot(recall2,precision2)
+plt.legend([L1,L2],['test1','test2'],loc='upper right')
+plt.show()
+
+fpr1, tpr1, thresholds3 = roc_curve(y_true, y_scores1)
+fpr2, tpr2, thresholds4 = roc_curve(y_true, y_scores2)
+
+from sklearn.metrics import auc
+print(auc(fpr1, tpr1))#显示模型1的auc
+print(auc(fpr2, tpr2))#显示模型2的auc
+plt.plot(fpr1,tpr1)
+plt.plot(fpr2,tpr2)
+plt.show()
+#第二题
+theta=0.93
+from sklearn.metrics import confusion_matrix
+for i in range(lens):
+    if y_scores1[i]>theta:
+        y_scores1[i]=1
+    else :
+        y_scores1[i]=0
+    if y_scores2[i]>theta:
+        y_scores2[i]=1
+    else:
+        y_scores2[i]=0
+
+print(confusion_matrix(y_true, y_scores1))
+print(confusion_matrix(y_true, y_scores1))
+#第三题
+cost01=1
+cost10=2
+
+result=0
+for i in range(250):
+    if y_true[i]==1:
+        result+=1
+p=result/250
+x0=p*cost01/(p*cost01+(1-p)*cost10)
+
+fpr1, tpr1, thresholds3 = roc_curve(y_true, y_scores1)
+
+for i in range(50):
+    x=[0,1]
+    y=[fpr1[i],1-tpr1[i]]
+    plt.plot(x,y,color='black')#绘制第一个代价曲线
+    
+x=[x0,x0]
+y=[0,1]
+l0,=plt.plot(x,y)#绘制固定的cost01、cost10下的横坐标
+plt.legend([l0], ['double cost10'])
+plt.show()
+
+fpr2, tpr2, thresholds4 = roc_curve(y_true, y_scores2)
+
+for i in range(50):
+    x=[0,1]
+    y=[fpr2[i],1-tpr2[i]]
+    plt.plot(x,y,color='black')#绘制代价曲线2
+    
+x=[x0,x0]
+y=[0,1]
+l0,=plt.plot(x,y)#绘制固定的cost01、cost10下的横坐标
+plt.legend([l0], ['double cost10'])
+plt.show()
+#第四题
+from pandas import read_excel
+import pandas as pd
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import roc_curve
+
+
+plt.figure("P-R Curve")
+plt.title('P-R Curve')
+plt.xlabel('precision')
+plt.ylabel('recall')
+#y_true为样本实际的类别，y_scores为样本为正例的概率
+datas=read_excel("C://Users//dax//Desktop//手写体数据.xlsx","数据")
+
+datas=datas.values
+
+
+
+#整体样本
+y_true = datas[:,0]
+y_true=pd.to_numeric(y_true)
+y_scores1 = datas[:,6]
+y_scores2 = datas[:,7]
+y_scores3 = datas[:,8]
+
+fpr1, tpr1, thresholds1 = roc_curve(y_true, y_scores1)
+fpr2, tpr2, thresholds2 = roc_curve(y_true, y_scores2)
+fpr3, tpr3, thresholds3 = roc_curve(y_true, y_scores3)
+
+from sklearn.metrics import auc
+print(auc(fpr1, tpr1))#显示模型1的auc
+print(auc(fpr2, tpr2))#显示模型2的auc
+print(auc(fpr3, tpr3))#显示模型2的auc
+plt.figure("ROC Curve")
+plt.title('ROC Curve')
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+l1,=plt.plot(fpr1,tpr1)
+l2,=plt.plot(fpr2,tpr2)
+l3,=plt.plot(fpr3,tpr3)
+plt.legend([l1,l2,l3],['test1','test2','test3'],loc='upper left')
+plt.show()
+
+
+后续代码（计算宏、微查全率和查准率）：（R语言）
+theta=0.35
+tr=[0,0,0]
+fr=[0,0,0]
+fp=[0,0,0]
+for i in range(len(datas)):
+    if (y_true[i]==1) & (y_scores1[i]>theta):
+        tr[0]+=1
+    elif (y_true[i]==1) & (y_scores1[i]<=theta):
+        fr[0]+=1
+    elif (y_true[i]==0) & (y_scores1[i]>theta):
+        fp[0]+=1
+    
+for i in range(len(datas)):
+    if (y_true[i]==1)&(y_scores2[i]>theta):
+        tr[1]+=1
+    elif (y_true[i]==1) & (y_scores2[i]<=theta):
+        fr[1]+=1
+    elif (y_true[i]==0) & (y_scores2[i]>theta):
+        fp[1]+=1
+
+for i in range(len(datas)):
+    if (y_true[i]==1)&(y_scores3[i]>theta):
+        tr[2]+=1
+    elif (y_true[i]==1) & (y_scores3[i]<=theta):
+        fr[2]+=1
+    elif (y_true[i]==0) & (y_scores3[i]>theta):
+        fp[2]+=1
+p=[tr[0]/(tr[0]+fr[0]),tr[1]/(tr[1]+fr[1]),tr[2]/(tr[2]+fr[2])]
+r=[tr[0]/(tr[0]+fp[0]),tr[1]/(tr[1]+fp[1]),tr[2]/(tr[2]+fp[2])]
+print(p)
+print(r)
+#第一次试验样本
+data1=datas[0,:]
+
+for i in range(1,479):
+    if datas[i,1]==2:
+        data1=np.vstack((data1,datas[i,:]))
+
+y_true = data1[:,0]
+y_true=pd.to_numeric(y_true)
+y_scores1 = data1[:,6]
+y_scores2 = data1[:,7]
+y_scores3 = data1[:,8]
+
+tr=[0,0,0]
+fr=[0,0,0]
+fp=[0,0,0]
+
+for i in range(len(data1)):
+    if (y_true[i]==1) & (y_scores1[i]>theta):
+        tr[0]+=1
+    elif (y_true[i]==1) & (y_scores1[i]<=theta):
+        fr[0]+=1
+    elif (y_true[i]==0) & (y_scores1[i]>theta):
+        fp[0]+=1
+    
+for i in range(len(data1)):
+    if (y_true[i]==1)&(y_scores2[i]>theta):
+        tr[1]+=1
+    elif (y_true[i]==1) & (y_scores2[i]<=theta):
+        fr[1]+=1
+    elif (y_true[i]==0) & (y_scores2[i]>theta):
+        fp[1]+=1
+
+for i in range(len(data1)):
+    if (y_true[i]==1)&(y_scores3[i]>theta):
+        tr[2]+=1
+    elif (y_true[i]==1) & (y_scores3[i]<=theta):
+        fr[2]+=1
+    elif (y_true[i]==0) & (y_scores3[i]>theta):
+        fp[2]+=1
+p1=[tr[0]/(tr[0]+fr[0]),tr[1]/(tr[1]+fr[1]),tr[2]/(tr[2]+fr[2])]
+r1=[tr[0]/(tr[0]+fp[0]),tr[1]/(tr[1]+fp[1]),tr[2]/(tr[2]+fp[2])]
+#第二次试验样本
+tr=[0,0,0]
+fr=[0,0,0]
+fp=[0,0,0]
+data2=np.array([0,0,0,0,0,0,0,0,0])
+for i in range(1,479):
+    if datas[i,2]==2:
+        data2=np.vstack((data2,datas[i,:]))
+data2=np.delete(data2,0, 0)
+
+y_true = data2[:,0]
+y_true=pd.to_numeric(y_true)
+y_scores1 = data2[:,6]
+y_scores2 = data2[:,7]
+y_scores3 = data2[:,8]
+for i in range(len(data2)):
+    if (y_true[i]==1) & (y_scores1[i]>theta):
+        tr[0]+=1
+    elif (y_true[i]==1) & (y_scores1[i]<=theta):
+        fr[0]+=1
+    elif (y_true[i]==0) & (y_scores1[i]>theta):
+        fp[0]+=1
+    
+for i in range(len(data2)):
+    if (y_true[i]==1)&(y_scores2[i]>theta):
+        tr[1]+=1
+    elif (y_true[i]==1) & (y_scores2[i]<=theta):
+        fr[1]+=1
+    elif (y_true[i]==0) & (y_scores2[i]>theta):
+        fp[1]+=1
+
+for i in range(len(data2)):
+    if (y_true[i]==1)&(y_scores3[i]>theta):
+        tr[2]+=1
+    elif (y_true[i]==1) & (y_scores3[i]<=theta):
+        fr[2]+=1
+    elif (y_true[i]==0) & (y_scores3[i]>theta):
+        fp[2]+=1
+p2=[tr[0]/(tr[0]+fr[0]),tr[1]/(tr[1]+fr[1]),tr[2]/(tr[2]+fr[2])]
+r2=[tr[0]/(tr[0]+fp[0]),tr[1]/(tr[1]+fp[1]),tr[2]/(tr[2]+fp[2])]
+
+#第三次试验样本
+tr=[0,0,0]
+fr=[0,0,0]
+fp=[0,0,0]
+data3=np.array([0,0,0,0,0,0,0,0,0])
+for i in range(1,479):
+    if datas[i,3]==2:
+        data3=np.vstack((data3,datas[i,:]))
+
+data3=np.delete(data3,0, 0)
+y_true = data3[:,0]
+y_true=pd.to_numeric(y_true)
+y_scores1 = data3[:,6]
+y_scores2 = data3[:,7]
+y_scores3 = data3[:,8]
+
+for i in range(len(data3)):
+    if (y_true[i]==1) & (y_scores1[i]>theta):
+        tr[0]+=1
+    elif (y_true[i]==1) & (y_scores1[i]<=theta):
+        fr[0]+=1
+    elif (y_true[i]==0) & (y_scores1[i]>theta):
+        fp[0]+=1
+    
+for i in range(len(data3)):
+    if (y_true[i]==1)&(y_scores2[i]>theta):
+        tr[1]+=1
+    elif (y_true[i]==1) & (y_scores2[i]<=theta):
+        fr[1]+=1
+    elif (y_true[i]==0) & (y_scores2[i]>theta):
+        fp[1]+=1
+
+for i in range(len(data3)):
+    if (y_true[i]==1)&(y_scores3[i]>theta):
+        tr[2]+=1
+    elif (y_true[i]==1) & (y_scores3[i]<=theta):
+        fr[2]+=1
+    elif (y_true[i]==0) & (y_scores3[i]>theta):
+        fp[2]+=1
+p3=[tr[0]/(tr[0]+fr[0]),tr[1]/(tr[1]+fr[1]),tr[2]/(tr[2]+fr[2])]
+r3=[tr[0]/(tr[0]+fp[0]),tr[1]/(tr[1]+fp[1]),tr[2]/(tr[2]+fp[2])]
+
+#第四次试验样本
+tr=[0,0,0]
+fr=[0,0,0]
+fp=[0,0,0]
+data4=np.array([0,0,0,0,0,0,0,0,0])
+for i in range(1,479):
+    if datas[i,4]==2:
+        data4=np.vstack((data4,datas[i,:]))
+
+data4=np.delete(data4,0, 0)
+y_true = data4[:,0]
+y_true=pd.to_numeric(y_true)
+y_scores1 = data4[:,6]
+y_scores2 = data4[:,7]
+y_scores3 = data4[:,8]
+
+for i in range(len(data4)):
+    if (y_true[i]==1) & (y_scores1[i]>theta):
+        tr[0]+=1
+    elif (y_true[i]==1) & (y_scores1[i]<=theta):
+        fr[0]+=1
+    elif (y_true[i]==0) & (y_scores1[i]>theta):
+        fp[0]+=1
+    
+for i in range(len(data4)):
+    if (y_true[i]==1)&(y_scores2[i]>theta):
+        tr[1]+=1
+    elif (y_true[i]==1) & (y_scores2[i]<=theta):
+        fr[1]+=1
+    elif (y_true[i]==0) & (y_scores2[i]>theta):
+        fp[1]+=1
+
+for i in range(len(data4)):
+    if (y_true[i]==1)&(y_scores3[i]>theta):
+        tr[2]+=1
+    elif (y_true[i]==1) & (y_scores3[i]<=theta):
+        fr[2]+=1
+    elif (y_true[i]==0) & (y_scores3[i]>theta):
+        fp[2]+=1
+p4=[tr[0]/(tr[0]+fr[0]),tr[1]/(tr[1]+fr[1]),tr[2]/(tr[2]+fr[2])]
+r4=[tr[0]/(tr[0]+fp[0]),tr[1]/(tr[1]+fp[1]),tr[2]/(tr[2]+fp[2])]
+
+
+#第五次试验样本
+tr=[0,0,0]
+fr=[0,0,0]
+fp=[0,0,0]
+data5=np.array([0,0,0,0,0,0,0,0,0])
+for i in range(1,479):
+    if datas[i,5]==2:
+        data5=np.vstack((data5,datas[i,:]))
+
+data5=np.delete(data5,0, 0)
+y_true = data5[:,0]
+y_true=pd.to_numeric(y_true)
+y_scores1 = data5[:,6]
+y_scores2 = data5[:,7]
+y_scores3 = data5[:,8]
+for i in range(len(data5)):
+    if (y_true[i]==1) & (y_scores1[i]>theta):
+        tr[0]+=1
+    elif (y_true[i]==1) & (y_scores1[i]<=theta):
+        fr[0]+=1
+    elif (y_true[i]==0) & (y_scores1[i]>theta):
+        fp[0]+=1
+    
+for i in range(len(data5)):
+    if (y_true[i]==1)&(y_scores2[i]>theta):
+        tr[1]+=1
+    elif (y_true[i]==1) & (y_scores2[i]<=theta):
+        fr[1]+=1
+    elif (y_true[i]==0) & (y_scores2[i]>theta):
+        fp[1]+=1
+
+for i in range(len(data5)):
+    if (y_true[i]==1)&(y_scores3[i]>theta):
+        tr[2]+=1
+    elif (y_true[i]==1) & (y_scores3[i]<=theta):
+        fr[2]+=1
+    elif (y_true[i]==0) & (y_scores3[i]>theta):
+        fp[2]+=1
+p5=[tr[0]/(tr[0]+fr[0]),tr[1]/(tr[1]+fr[1]),tr[2]/(tr[2]+fr[2])]
+r5=[tr[0]/(tr[0]+fp[0]),tr[1]/(tr[1]+fp[1]),tr[2]/(tr[2]+fp[2])]
+p0=[(p1[i]+p2[i]+p3[i]+p4[i]+p5[i])/5 for i in range(len(p1))]
+r0=[(r1[i]+r2[i]+r3[i]+r4[i]+r5[i])/5 for i in range(len(r1))]
+print(p0)
+print(r0)
+'''print(precision1)
+print(recall1)
+print(thresholds1)'''
+from pandas import read_excel
+import pandas as pd
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import roc_curve
+
+
+plt.figure("P-R Curve")
+plt.title('P-R Curve')
+plt.xlabel('precision')
+plt.ylabel('recall')
+#y_true为样本实际的类别，y_scores为样本为正例的概率
+datas=read_excel("C://Users//dax//Desktop//手写体数据.xlsx","数据")
+
+datas=datas.values
+
+
+
+#整体样本
+y_true = datas[:,0]
+y_true=pd.to_numeric(y_true)
+y_scores1 = datas[:,6]
+y_scores2 = datas[:,7]
+y_scores3 = datas[:,8]
+
+
+fpr1, tpr1, thresholds1 = roc_curve(y_true, y_scores1)
+fpr2, tpr2, thresholds2 = roc_curve(y_true, y_scores2)
+fpr3, tpr3, thresholds3 = roc_curve(y_true, y_scores3)
+'''for i in range(len(fpr1)):
+    x=[0,1]
+    y=[fpr1[i],1-tpr1[i]]
+    plt.plot(x,y,color='black')#绘制代价曲线1
+
+
+for i in range(len(fpr2)):
+    x=[0,1]
+    y=[fpr2[i],1-tpr2[i]]
+    plt.plot(x,y,color='black')#绘制代价曲线2
+'''
+for i in range(len(fpr3)):
+    x=[0,1]
+    y=[fpr3[i],1-tpr3[i]]
+    plt.plot(x,y,color='black')#绘制代价曲线3
+plt.show()
