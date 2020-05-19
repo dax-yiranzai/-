@@ -1,0 +1,260 @@
+#机器学习4.20作业1（r语言）
+#代码如下：
+chd=heart[10]
+Y=chd[[1]]
+
+tobatto=heart[2]
+tobatto=tobatto[[1]]
+
+ldl=heart[3]
+ldl=ldl[[1]]
+
+age=heart[9]
+age=age[[1]]
+x1<-rep(1,462)
+X=data.frame(tobatto,ldl,age,x1)
+X<-as.matrix(X)
+
+beta=c(0.1,0.1,0.1,0.1)
+#设定迭代次数
+maxiteration=1000
+epsilon=0.01
+#设定学习速度
+alpha=0.007
+for ( n in 1:maxiteration){
+  #计算fxk
+  fxk=0
+  for(i in 1:462)
+  {
+    fxk=fxk-Y[i]*crossprod(beta,X[i,])+log(1+exp(beta%*%X[i,]))
+  }
+  
+  #计算梯度
+  grad=c(0,0,0,0)
+  for(j in 1:462)
+  {
+    x1=X[j,1]*(Y[j]-1+1/exp(crossprod(beta%*%X[j,])))
+    x2=X[j,2]*(Y[j]-1+1/exp(beta%*%X[j,]))
+    x3=X[j,3]*(Y[j]-1+1/exp(beta%*%X[j,]))
+    x4=X[j,4]*(Y[j]-1+1/exp(beta%*%X[j,]))
+    grad=grad+c(x1,x2,x3,x4)
+  }
+  if(crossprod(grad,grad)<epsilon*epsilon)break()
+  #参数更新或改进
+  beta=beta-alpha*grad
+  #计算fxk
+  fxk1=0
+  for(i in 1:462)
+  {
+    fxk1=fxk1-(Y[i]*beta%*%X[i,]+log(1+exp(beta%*%X[i,])))
+  }
+  if(crossprod(alpha*grad,alpha*grad)<epsilon*epsilon)break()
+  if((fxk-fxk1)*(fxk-fxk1)<epsilon*epsilon)break()
+}
+print(beta)
+beta0=crossprod(beta,beta)
+beta=beta/sqrt(beta0[1])
+#计算准确率
+w1=beta[1:3]
+trues=0
+for(i in 1:462)
+{
+  if(crossprod(w1,c(tobatto[i],ldl[i],age[i]))>beta[4]){
+    if(Y[i]==1)trues=trues+1
+  }
+  else
+  {
+    if(Y[i]==0)trues=trues+1
+  }
+}
+#绘图
+x=x1[,1]
+y=x1[,2]
+z=x1[,3]
+x0=x2[,1]
+y0=x2[,2]
+z0=x2[,3]
+s3d=scatterplot3d(x,y,z,color="orange",tick.marks = TRUE)
+s3d$points3d(x0,y0,z0)
+s3d$plane3d(beta[4],beta[1],beta[2],draw_polygon = TRUE)
+
+#机器学习线性判别分析3.5题
+import numpy as np
+import matplotlib.pyplot as plt
+data = np.array([[0.697, 0.460, 1],
+        [0.774, 0.376, 1],
+        [0.634, 0.264, 1],
+        [0.608, 0.318, 1],
+        [0.556, 0.215, 1],
+        [0.403, 0.237, 1],
+        [0.481, 0.149, 1],
+        [0.437, 0.211, 1],
+        [0.666, 0.091, 0],
+        [0.243, 0.267, 0],
+        [0.245, 0.057, 0],
+        [0.343, 0.099, 0],
+        [0.639, 0.161, 0],
+        [0.657, 0.198, 0],
+        [0.360, 0.370, 0],
+        [0.593, 0.042, 0],
+        [0.719, 0.103, 0]])   #西瓜数据集3.0
+#按瓜好坏分类
+#删除最后的标签
+x0 = np.array([0,0])#好瓜
+x1 = np.array([0,0])#坏瓜
+for i in data:
+    if i[2]==1:
+        x0=np.vstack((x0,i[:-1]))
+    else :
+        x1=np.vstack((x1,i[:-1]))
+x0=np.delete(x0,0, 0)
+x1=np.delete(x1,0,0)
+#求正反例均值
+miu0 = np.mean(x0, axis=0).reshape((-1, 1))
+miu1 = np.mean(x1, axis=0).reshape((-1, 1))
+#求协方差
+cov0 = np.cov(x0, rowvar=False)
+cov1 = np.cov(x1, rowvar=False)
+#求出w
+S_w = np.mat(cov0 + cov1)
+Omiga = S_w.I * (miu0 - miu1)
+#画出点、直线
+plt.scatter(x0[:, 0], x0[:, 1], c='b', label='+', marker = '+')
+plt.scatter(x1[:, 0], x1[:, 1], c='r', label='-', marker = '_')
+plt.plot([0, 1], [0, -Omiga[0] / Omiga[1]], label='y')
+plt.xlabel('密度', fontproperties='SimHei', fontsize=15, color='green');
+plt.ylabel('含糖率', fontproperties='SimHei', fontsize=15, color='green');
+plt.title(r'3.5 线性判别分析', fontproperties='SimHei', fontsize=25);
+plt.legend()
+plt.show()
+
+机器学习4.20作业3#r语言代码
+#全部代码如下：
+i1=0
+i2=0
+#导入数据
+chd=heart[10]
+chd=chd[[1]]
+
+tobatto=heart[2]
+tobatto=tobatto[[1]]
+
+ldl=heart[3]
+ldl=ldl[[1]]
+
+age=heart[9]
+age=age[[1]]
+#统计正例反例个数
+for(i in chd)
+{
+  if(i==1)
+    i1=i1+1
+  else 
+    i2=i2+1
+}
+
+
+x1=matrix(1:i1,i1,3)
+x2=matrix(1:i2,i2,3)
+
+j1=1
+j2=1
+
+#将正例、反例分开储存
+for(i in 1:length(chd))
+{
+  if(chd[i]==1)
+  {
+    x1[j1,1]=tobatto[i]
+    x1[j1,2]=ldl[i]
+    x1[j1,3]=age[i]
+    j1=j1+1
+  }
+  else
+  {
+    x2[j2,1]=tobatto[i]
+    x2[j2,2]=ldl[i]
+    x2[j2,3]=age[i]
+    j2=j2+1
+  }
+}
+#求均值
+u1=colMeans(x1)
+u2=colMeans(x2)
+
+t1=matrix(0,3,3)
+t2=matrix(0,3,3)
+#求协方差
+for (i in nrow(x1))
+{
+  x=x1[i,1:3]-u1
+  t=x%o%x
+  t1=t+t1
+}
+for (i in nrow(x2))
+{
+  y=x2[i,1:3]-u2
+  r=y%o%y
+  t2=r+t2
+}
+#求sw
+sw=t1+t2
+I=diag(3)
+#sw的逆矩阵不存在，为sw加上很小的单位矩阵
+sw=sw+0.001*I
+#求最大似然估计的协方差
+t1=t1/i1
+t2=t2/i2
+#求参数w
+w=solve(sw)%*%(u1-u2)
+#单位化
+w0=crossprod(w,w)
+w0=sqrt(w0)
+w=w/w0[1]
+
+#求正确率最大时的w0
+ym=matrix(0,462,2)
+for(i in 1:462)
+{
+  ym[i,1]=chd[i]
+  ym[i,2]=crossprod(w,c(tobatto[i],ldl[i],age[i]))
+}
+ym[order(ym[,2],decreasing=T),]
+min_y=min(ym[,2])
+max_y=max(ym[,2])
+trues=0
+x0=seq(1:462)
+y0=seq(1:462)
+for(i in 1:462)
+{
+  trues=0
+  for(j1 in 1:i)
+  {
+    if(ym[j1,1]==1)trues=trues+1
+  }
+  if(i==462)
+  {
+    y0[i]=trues/462
+    break()
+  }
+  for(j2 in (i+1):462)
+  {
+    if(ym[j2,1]==0)trues=trues+1
+  }
+  y0[i]=trues/462
+}
+plot(x0,y0)
+print(ym[which.max(y0),2])
+w1=c(0.61,-0.45,0.64)
+trues=0
+for(i in 1:462)
+{
+  if(crossprod(w1,c(tobatto[i],ldl[i],age[i]))>22.90137){
+    if(chd[i]==1)trues=trues+1
+  }
+  else
+  {
+    if(chd[i]==0)trues=trues+1
+  }
+}
+
